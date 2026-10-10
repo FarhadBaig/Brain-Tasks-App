@@ -121,6 +121,21 @@ Inspect application logs in Kubernetes:
 
 ```bash
 kubectl logs deployment/brain-tasks-app
+
+### Live Deployment
+
+- **Application URL:** http://aac3cc909c8a14ecc961f73d6db68192-1863119058.ap-south-1.elb.amazonaws.com
+- **AWS Region:** `ap-south-1`
+- **EKS Cluster:** `brain-tasks-eks`
+- **Kubernetes Deployment:** `brain-tasks-app`
+- **Kubernetes Service:** `brain-tasks-service`
+- **LoadBalancer Name:** `aac3cc909c8a14ecc961f73d6db68192`
+- **LoadBalancer Type:** Classic Load Balancer
+- **Scheme:** Internet-facing
+- **Traffic:** Port 80 → NodePort 31419 → Application port 3000
+
+The application is deployed on Amazon EKS using a Docker image stored in Amazon ECR. The CI/CD workflow uses GitHub, AWS CodePipeline, and AWS CodeBuild.
+
 ```
 
 Inspect deployment status:
