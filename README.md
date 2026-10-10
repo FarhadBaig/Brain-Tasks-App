@@ -1,91 +1,142 @@
-DevOps Practice Project – Dist Directory
+﻿# Brain Tasks App — AWS DevOps Deployment
 
-This repository contains the production-ready build files (dist folder) for DevOps practice and deployment exercises.
+A DevOps practice project demonstrating Docker containerization, Amazon ECR, Amazon EKS, Kubernetes, and AWS CI/CD services.
 
-It is intentionally structured to help learners focus on CI/CD pipelines, hosting, containerization, and infrastructure setup rather than application development.
+## Architecture
 
-📁 What This Repository Contains
+GitHub → AWS CodePipeline → AWS CodeBuild → Amazon ECR → Amazon EKS → Kubernetes LoadBalancer → Browser
 
-dist/ – Compiled and production-ready static files
+## Project Structure
 
-HTML
+```text
+Brain-Tasks-App/
+├── dist/                  # Prebuilt static application
+├── Screenshots/            # Deployment evidence
+├── Dockerfile              # Docker image configuration
+├── default.conf            # Nginx configuration for port 3000
+├── deployment.yaml         # Kubernetes Deployment
+├── service.yaml            # Kubernetes LoadBalancer Service
+├── buildspec.yml           # Docker build and ECR push
+├── buildspec-deploy.yml    # Kubernetes deployment commands
+└── README.md
+```
 
-CSS
+## Technologies
 
-JavaScript
+- Docker and Nginx
+- Amazon ECR
+- Amazon EKS and Kubernetes
+- AWS CodeBuild and CodePipeline
+- Amazon CloudWatch
+- Git and GitHub
 
-Assets (images, fonts, etc.)
+## Application Details
 
-These files are ready to deploy to:
+This repository contains prebuilt static files in `dist/`. It does not contain the original React source code or `package.json`. Therefore, Nginx serves the existing build instead of compiling the React application.
 
-Web servers (Nginx / Apache)
+- Container port: `3000`
+- Kubernetes Service port: `80`
+- Service type: `LoadBalancer`
+- AWS Region: `ap-south-1`
+- ECR repository: `brain-tasks-app`
+- EKS cluster: `brain-tasks-eks`
 
-Cloud platforms (AWS S3, Azure Blob, GCP Storage)
+## Run Locally with Docker
 
-Containerized environments (Docker + Nginx)
+Build the image:
 
-Kubernetes clusters
+```bash
+docker build -t brain-tasks-app:1.0 .
+```
 
-CI/CD pipeline demonstrations
+Run the container:
 
-🎯 Purpose of This Repository
+```bash
+docker run -d --name brain-tasks-app -p 3000:3000 brain-tasks-app:1.0
+```
 
-This repository is designed for:
+If the container already exists, start it with:
 
-DevOps beginners
+```bash
+docker start brain-tasks-app
+```
 
-CI/CD practice
+Open `http://localhost:3000` in a browser.
 
-Deployment pipeline testing
+Inspect the container and logs:
 
-Docker & Kubernetes deployment exercises
+```bash
+docker ps
+docker logs brain-tasks-app
+```
 
-Web server configuration practice
+## Amazon ECR Image
 
-Reverse proxy and load balancer setup
+The image is published in Amazon ECR:
 
-The goal is to simulate real-world deployment scenarios using already built application files.
+`395307915231.dkr.ecr.ap-south-1.amazonaws.com/brain-tasks-app:1.0`
 
-❓ Why is there NO package.json?
+## Kubernetes Deployment
 
-You may notice that this repository does not include:
+Configure kubectl for the EKS cluster:
 
-package.json
+```bash
+aws eks update-kubeconfig --region ap-south-1 --name brain-tasks-eks
+```
 
-node_modules
+Apply the Kubernetes resources:
 
-Source code (src/)
+```bash
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+```
 
-Build tools configuration
+Verify the resources:
 
-✅ Reason:
+```bash
+kubectl get deployments
+kubectl get pods -o wide
+kubectl get svc brain-tasks-service
+```
 
-This repository only contains the final production build output (dist), not the development source code.
+Get the public LoadBalancer hostname:
 
-In a typical project:
+```bash
+kubectl get svc brain-tasks-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+```
 
-Developers write source code.
+Open `http://<load-balancer-hostname>` in a browser.
 
-The project is built using tools like:
+## CI/CD Configuration
 
-Node.js
+- `buildspec.yml` defines the Docker image build and push to Amazon ECR.
+- `buildspec-deploy.yml` defines the Kubernetes rollout using kubectl.
+- A CodePipeline can connect a GitHub source stage, an image-build CodeBuild project, and a deployment CodeBuild project.
 
-Webpack
+Before automated deployments work, configure the GitHub connection, CodeBuild projects, ECR permissions, EKS access for the deployment role, and the CodePipeline stages.
 
-Vite
+## Logging and Troubleshooting
 
-React (or other frameworks)
+Inspect application logs in Kubernetes:
 
-A dist/ folder is generated.
+```bash
+kubectl logs deployment/brain-tasks-app
+```
 
-Only the production build is deployed to servers.
+Inspect deployment status:
 
-This repository represents step 4 only.
+```bash
+kubectl rollout status deployment/brain-tasks-app
+kubectl describe deployment brain-tasks-app
+kubectl describe svc brain-tasks-service
+```
 
-Since this is already the compiled output:
+CodeBuild build logs can be sent to CloudWatch Logs through the CodeBuild project settings. Kubernetes application logs can be viewed with kubectl; centralized application logging requires an appropriate CloudWatch logging agent or add-on.
 
-No dependencies are required
+## Screenshots
 
-No build process is required
+The `Screenshots/` directory contains evidence of the local application, Docker image and container, ECR image, EKS cluster, Kubernetes resources, LoadBalancer service, and working public application.
 
-No package.json is needed
+## Cleanup
+
+AWS resources may continue to incur charges while running. After assessment and submission, delete resources that are no longer required, including the EKS cluster, LoadBalancer, CodePipeline, and CodeBuild projects. Retain screenshots and any required ECR image until submission is complete.

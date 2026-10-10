@@ -1,0 +1,20 @@
+﻿version: 0.2
+
+phases:
+  install:
+    commands:
+      - curl -fsSL -o kubectl https://dl.k8s.io/release/v1.34.11/bin/linux/amd64/kubectl
+      - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+  pre_build:
+    commands:
+      - aws eks update-kubeconfig --region ap-south-1 --name brain-tasks-eks
+      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - REPOSITORY_URI=$ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/brain-tasks-app
+      - IMAGE_TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION
+  build:
+    commands:
+      - kubectl set image deployment/brain-tasks-app brain-tasks-app=$REPOSITORY_URI:$IMAGE_TAG
+      - kubectl rollout status deployment/brain-tasks-app --timeout=300s
+      - kubectl get deployments
+      - kubectl get pods
+      - kubectl get svc brain-tasks-service
